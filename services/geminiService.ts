@@ -10,9 +10,16 @@ interface AIStudioClient {
 }
 
 /**
- * Checks if the user has selected an API key via the AI Studio overlay.
+ * Checks if the user has selected an API key via the AI Studio overlay
+ * OR if the API key is available in the environment variables (Netlify/Production).
  */
 export const checkApiKey = async (): Promise<boolean> => {
+  // 1. Production/Netlify check: Is the key baked in via Vite define?
+  if (process.env.API_KEY && process.env.API_KEY.length > 0) {
+    return true;
+  }
+
+  // 2. Playground/Dev check: AI Studio Overlay
   const aistudio = (window as any).aistudio as AIStudioClient | undefined;
   if (aistudio && aistudio.hasSelectedApiKey) {
     return await aistudio.hasSelectedApiKey();
@@ -22,13 +29,14 @@ export const checkApiKey = async (): Promise<boolean> => {
 
 /**
  * Opens the API key selection dialog.
+ * Only works in the AI Studio environment.
  */
 export const requestApiKey = async (): Promise<void> => {
   const aistudio = (window as any).aistudio as AIStudioClient | undefined;
   if (aistudio && aistudio.openSelectKey) {
     await aistudio.openSelectKey();
   } else {
-    console.error("AI Studio overlay not found");
+    console.warn("AI Studio overlay not found. Ensure API_KEY is set in environment variables for production.");
   }
 };
 
